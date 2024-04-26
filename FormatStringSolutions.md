@@ -242,7 +242,7 @@ open('payload_f3','wb').write(payload)
 HMMMMMMMMMMMM......almost but not quite.
 
 *OH IM SO DUMB* its in hex so we have to send that value converted to an int and subtract 4
-(because size of address we're overwriting is 4
+(because size of address we're overwriting is 4)
 
 ```python
 payload = p32(0x5655900c) # Address of changeme at runtime using GDB
